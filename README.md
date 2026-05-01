@@ -48,3 +48,19 @@ Step 5 adds the first deployable AWS network foundation for the staging environm
 - Security groups for future ALB, ECS app, RDS database, and interface VPC endpoints
 
 This step intentionally avoids ECS, RDS, ALB, NAT Gateway, Route 53, and ACM to keep cost low while building the production-style foundation.
+
+## Step 6 - Staging RDS PostgreSQL database and secrets foundation
+
+Step 6 adds the private database tier for the staging environment:
+
+- Private Amazon RDS PostgreSQL database
+- DB subnet group using private data subnets only
+- RDS-managed master password stored in AWS Secrets Manager
+- Encrypted RDS storage
+- PostgreSQL CloudWatch log exports
+- 7-day backup retention for staging
+- Terraform outputs for future ECS integration
+- Updated FastAPI database configuration for future PostgreSQL use
+- New Step 6 Docker image pushed to ECR
+
+This step intentionally does not create ECS, ALB, Route 53, ACM, NAT Gateway, or a public application URL.
