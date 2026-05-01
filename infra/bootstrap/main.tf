@@ -93,3 +93,16 @@ module "ecr_api" {
   force_delete    = var.allow_force_delete
   tags            = local.common_tags
 }
+module "actions_deploy" {
+  source = "../modules/actions_deploy"
+
+  name_prefix         = local.name_prefix
+  environment         = "staging"
+  aws_region          = var.aws_region
+  github_repository   = "Daryoush1989/crudapp-platform"
+  github_environment  = "staging"
+  ecr_repository_name = local.ecr_repo_name
+
+  tags = local.common_tags
+}
+

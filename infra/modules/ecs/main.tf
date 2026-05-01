@@ -229,4 +229,8 @@ resource "aws_ecs_service" "api" {
     Name = local.service_name
     Tier = "private-app"
   })
+
+  lifecycle {
+    ignore_changes = [task_definition]
+  }
 }
