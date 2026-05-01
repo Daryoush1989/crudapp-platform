@@ -51,3 +51,24 @@ resource "aws_vpc_endpoint" "interface" {
     Tier = "private-endpoints"
   })
 }
+resource "aws_vpc_security_group_egress_rule" "app_to_interface_endpoints_https" {
+  security_group_id            = var.app_security_group_id
+  description                  = "Allow app tasks to reach actual interface VPC endpoints over HTTPS"
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
+  referenced_security_group_id = aws_security_group.endpoints.id
+}
+
+data "aws_prefix_list" "s3" {
+  name = "com.amazonaws.${var.aws_region}.s3"
+}
+
+resource "aws_vpc_security_group_egress_rule" "app_to_s3_gateway_endpoint_https" {
+  security_group_id = var.app_security_group_id
+  description       = "Allow app tasks to reach S3 Gateway endpoint for ECR image layers"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+  prefix_list_id    = data.aws_prefix_list.s3.id
+}
