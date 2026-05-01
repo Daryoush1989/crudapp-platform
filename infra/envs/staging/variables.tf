@@ -52,12 +52,6 @@ variable "private_data_subnet_cidrs" {
   default     = ["10.50.20.0/24", "10.50.21.0/24"]
 }
 
-variable "enable_s3_gateway_endpoint" {
-  description = "Create the S3 Gateway endpoint for private route tables."
-  type        = bool
-  default     = true
-}
-
 variable "db_name" {
   description = "Initial staging database name."
   type        = string
@@ -86,4 +80,45 @@ variable "db_instance_class" {
   description = "Small staging RDS instance class."
   type        = string
   default     = "db.t4g.micro"
+}
+
+variable "api_image_tag" {
+  description = "Immutable ECR image tag for the API container, for example step7-abc1234."
+  type        = string
+}
+
+variable "api_container_port" {
+  description = "FastAPI container port."
+  type        = number
+  default     = 8080
+}
+
+variable "api_cpu" {
+  description = "Fargate task CPU units for staging."
+  type        = number
+  default     = 256
+}
+
+variable "api_memory" {
+  description = "Fargate task memory in MiB for staging."
+  type        = number
+  default     = 512
+}
+
+variable "api_desired_count" {
+  description = "Desired number of API tasks. Start with 0, migrate database, then scale to 1."
+  type        = number
+  default     = 0
+}
+
+variable "api_log_retention_days" {
+  description = "CloudWatch log retention in days for the API container."
+  type        = number
+  default     = 7
+}
+
+variable "fargate_platform_version" {
+  description = "Fargate platform version."
+  type        = string
+  default     = "1.4.0"
 }

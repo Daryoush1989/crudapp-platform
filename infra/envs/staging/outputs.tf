@@ -19,12 +19,12 @@ output "public_subnet_ids" {
 }
 
 output "private_app_subnet_ids" {
-  description = "Private app subnet IDs for future ECS tasks."
+  description = "Private app subnet IDs for ECS tasks."
   value       = module.network.private_app_subnet_ids
 }
 
 output "private_data_subnet_ids" {
-  description = "Private data subnet IDs for future RDS."
+  description = "Private data subnet IDs for RDS."
   value       = module.network.private_data_subnet_ids
 }
 
@@ -44,13 +44,23 @@ output "alb_security_group_id" {
 }
 
 output "app_security_group_id" {
-  description = "Future ECS app security group ID."
+  description = "ECS app security group ID."
   value       = module.security.app_security_group_id
 }
 
 output "db_security_group_id" {
   description = "RDS DB security group ID."
   value       = module.security.db_security_group_id
+}
+
+output "endpoint_security_group_id" {
+  description = "Interface endpoint security group ID."
+  value       = module.vpc_endpoints.endpoint_security_group_id
+}
+
+output "interface_endpoint_ids" {
+  description = "Interface VPC endpoint IDs."
+  value       = module.vpc_endpoints.interface_endpoint_ids
 }
 
 output "db_instance_identifier" {
@@ -86,4 +96,44 @@ output "db_master_user_secret_arn" {
 output "cloudwatch_postgresql_log_group_name" {
   description = "CloudWatch PostgreSQL log group name."
   value       = module.database.cloudwatch_postgresql_log_group_name
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name."
+  value       = module.ecs_api.ecs_cluster_name
+}
+
+output "api_service_name" {
+  description = "ECS API service name."
+  value       = module.ecs_api.api_service_name
+}
+
+output "api_task_definition_arn" {
+  description = "API task definition ARN."
+  value       = module.ecs_api.api_task_definition_arn
+}
+
+output "api_log_group_name" {
+  description = "CloudWatch log group name for the API container."
+  value       = module.ecs_api.api_log_group_name
+}
+
+output "api_container_name" {
+  description = "API container name."
+  value       = module.ecs_api.api_container_name
+}
+
+output "api_container_image" {
+  description = "Full API container image."
+  value       = module.ecs_api.api_container_image
+}
+
+output "task_execution_role_arn" {
+  description = "ECS task execution role ARN."
+  value       = module.ecs_api.task_execution_role_arn
+}
+
+output "task_role_arn" {
+  description = "ECS task role ARN."
+  value       = module.ecs_api.task_role_arn
 }

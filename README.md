@@ -64,3 +64,19 @@ Step 6 adds the private database tier for the staging environment:
 - New Step 6 Docker image pushed to ECR
 
 This step intentionally does not create ECS, ALB, Route 53, ACM, NAT Gateway, or a public application URL.
+
+## Step 7 - Staging ECS Fargate private runtime
+
+Step 7 adds the private application runtime for the staging environment:
+
+- ECS Fargate cluster
+- Private ECS service in private app subnets
+- ECS task execution role and task role
+- CloudWatch log group for the API container
+- VPC interface endpoints for ECR, CloudWatch Logs, and Secrets Manager
+- Secrets Manager injection for database username and password
+- FastAPI container deployed without a public IP
+- One-off ECS migration task support for Alembic
+
+This step intentionally does not create an Application Load Balancer, Route 53 records, ACM certificate, NAT Gateway, or public application URL.
+

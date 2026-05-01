@@ -28,9 +28,6 @@ class Settings(BaseSettings):
 
     @property
     def sqlalchemy_database_url(self) -> str:
-        if self.database_url:
-            return self.database_url
-
         if self.db_host and self.db_user and self.db_password:
             username = quote_plus(self.db_user)
             password = quote_plus(self.db_password)
@@ -40,6 +37,9 @@ class Settings(BaseSettings):
                 f"@{self.db_host}:{self.db_port}/{self.db_name}"
                 f"?sslmode={self.db_sslmode}"
             )
+
+        if self.database_url:
+            return self.database_url
 
         return "sqlite:///./local.db"
 
