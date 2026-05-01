@@ -44,3 +44,7 @@ override.tf.json
 
 # Docker
 *.tar
+
+# Terraform plan files
+*.tfplan
+tfplan
