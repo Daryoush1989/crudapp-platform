@@ -35,19 +35,19 @@ variable "vpc_cidr" {
 }
 
 variable "public_subnet_cidrs" {
-  description = "Public subnet CIDRs for the future ALB tier."
+  description = "Public subnet CIDRs for the ALB tier."
   type        = list(string)
   default     = ["10.50.0.0/24", "10.50.1.0/24"]
 }
 
 variable "private_app_subnet_cidrs" {
-  description = "Private subnet CIDRs for the future ECS app tier."
+  description = "Private subnet CIDRs for the ECS app tier."
   type        = list(string)
   default     = ["10.50.10.0/24", "10.50.11.0/24"]
 }
 
 variable "private_data_subnet_cidrs" {
-  description = "Private subnet CIDRs for the future RDS data tier."
+  description = "Private subnet CIDRs for the RDS data tier."
   type        = list(string)
   default     = ["10.50.20.0/24", "10.50.21.0/24"]
 }
@@ -83,7 +83,7 @@ variable "db_instance_class" {
 }
 
 variable "api_image_tag" {
-  description = "Immutable ECR image tag for the API container, for example step7-abc1234."
+  description = "ECR image tag to deploy, for example step7-abc1234."
   type        = string
 }
 
@@ -94,31 +94,55 @@ variable "api_container_port" {
 }
 
 variable "api_cpu" {
-  description = "Fargate task CPU units for staging."
+  description = "Fargate CPU units for the API task."
   type        = number
   default     = 256
 }
 
 variable "api_memory" {
-  description = "Fargate task memory in MiB for staging."
+  description = "Fargate memory in MiB for the API task."
   type        = number
   default     = 512
 }
 
 variable "api_desired_count" {
-  description = "Desired number of API tasks. Start with 0, migrate database, then scale to 1."
+  description = "API service desired task count."
   type        = number
-  default     = 0
+  default     = 1
 }
 
 variable "api_log_retention_days" {
-  description = "CloudWatch log retention in days for the API container."
+  description = "CloudWatch log retention in days for API logs."
   type        = number
   default     = 7
 }
 
 variable "fargate_platform_version" {
-  description = "Fargate platform version."
+  description = "Fargate platform version for the API service."
   type        = string
   default     = "1.4.0"
+}
+
+variable "domain_name" {
+  description = "Base public domain name."
+  type        = string
+  default     = "awsclouddash.click"
+}
+
+variable "app_subdomain" {
+  description = "Subdomain for the staging API."
+  type        = string
+  default     = "staging"
+}
+
+variable "alb_access_log_retention_days" {
+  description = "Retention period for ALB access logs."
+  type        = number
+  default     = 30
+}
+
+variable "allow_force_destroy_alb_logs" {
+  description = "Only set true for cleanup if you want Terraform to delete a non-empty ALB log bucket."
+  type        = bool
+  default     = false
 }

@@ -14,7 +14,7 @@ output "vpc_cidr_block" {
 }
 
 output "public_subnet_ids" {
-  description = "Public subnet IDs for future ALB."
+  description = "Public subnet IDs for ALB."
   value       = module.network.public_subnet_ids
 }
 
@@ -28,18 +28,8 @@ output "private_data_subnet_ids" {
   value       = module.network.private_data_subnet_ids
 }
 
-output "public_route_table_id" {
-  description = "Public route table ID."
-  value       = module.network.public_route_table_id
-}
-
-output "s3_gateway_endpoint_id" {
-  description = "S3 Gateway endpoint ID."
-  value       = module.network.s3_gateway_endpoint_id
-}
-
 output "alb_security_group_id" {
-  description = "Future ALB security group ID."
+  description = "ALB security group ID."
   value       = module.security.alb_security_group_id
 }
 
@@ -53,21 +43,6 @@ output "db_security_group_id" {
   value       = module.security.db_security_group_id
 }
 
-output "endpoint_security_group_id" {
-  description = "Interface endpoint security group ID."
-  value       = module.vpc_endpoints.endpoint_security_group_id
-}
-
-output "interface_endpoint_ids" {
-  description = "Interface VPC endpoint IDs."
-  value       = module.vpc_endpoints.interface_endpoint_ids
-}
-
-output "db_instance_identifier" {
-  description = "RDS DB instance identifier."
-  value       = module.database.db_instance_identifier
-}
-
 output "db_address" {
   description = "RDS DB address."
   value       = module.database.db_address
@@ -76,11 +51,6 @@ output "db_address" {
 output "db_endpoint" {
   description = "RDS DB endpoint."
   value       = module.database.db_endpoint
-}
-
-output "db_port" {
-  description = "RDS DB port."
-  value       = module.database.db_port
 }
 
 output "db_name" {
@@ -93,9 +63,9 @@ output "db_master_user_secret_arn" {
   value       = module.database.db_master_user_secret_arn
 }
 
-output "cloudwatch_postgresql_log_group_name" {
-  description = "CloudWatch PostgreSQL log group name."
-  value       = module.database.cloudwatch_postgresql_log_group_name
+output "interface_endpoint_ids" {
+  description = "Interface endpoint IDs used by private ECS runtime."
+  value       = module.vpc_endpoints.interface_endpoint_ids
 }
 
 output "ecs_cluster_name" {
@@ -104,7 +74,7 @@ output "ecs_cluster_name" {
 }
 
 output "api_service_name" {
-  description = "ECS API service name."
+  description = "API ECS service name."
   value       = module.ecs_api.api_service_name
 }
 
@@ -114,8 +84,13 @@ output "api_task_definition_arn" {
 }
 
 output "api_log_group_name" {
-  description = "CloudWatch log group name for the API container."
+  description = "CloudWatch log group for API container logs."
   value       = module.ecs_api.api_log_group_name
+}
+
+output "api_container_image" {
+  description = "Container image deployed by the API task definition."
+  value       = local.api_container_image
 }
 
 output "api_container_name" {
@@ -123,17 +98,42 @@ output "api_container_name" {
   value       = module.ecs_api.api_container_name
 }
 
-output "api_container_image" {
-  description = "Full API container image."
-  value       = module.ecs_api.api_container_image
+output "acm_certificate_arn" {
+  description = "ACM certificate ARN."
+  value       = module.acm.certificate_arn
 }
 
-output "task_execution_role_arn" {
-  description = "ECS task execution role ARN."
-  value       = module.ecs_api.task_execution_role_arn
+output "alb_name" {
+  description = "Application Load Balancer name."
+  value       = module.alb.alb_name
 }
 
-output "task_role_arn" {
-  description = "ECS task role ARN."
-  value       = module.ecs_api.task_role_arn
+output "alb_dns_name" {
+  description = "Application Load Balancer DNS name."
+  value       = module.alb.alb_dns_name
+}
+
+output "api_target_group_arn" {
+  description = "API target group ARN."
+  value       = module.alb.api_target_group_arn
+}
+
+output "api_target_group_name" {
+  description = "API target group name."
+  value       = module.alb.api_target_group_name
+}
+
+output "public_app_url" {
+  description = "Public HTTPS URL for the staging app."
+  value       = "https://${module.dns.fqdn}"
+}
+
+output "route53_record_name" {
+  description = "Route 53 public record."
+  value       = module.dns.fqdn
+}
+
+output "alb_access_logs_bucket_name" {
+  description = "S3 bucket for ALB access logs."
+  value       = module.alb_logs.bucket_name
 }

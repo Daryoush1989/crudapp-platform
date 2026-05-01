@@ -1,3 +1,10 @@
+locals {
+  task_family         = "${var.name_prefix}-${var.environment}-api"
+  service_name        = "${var.name_prefix}-${var.environment}-api-service"
+  api_container_name  = "api"
+  api_container_image = var.container_image
+}
+
 data "aws_iam_policy_document" "ecs_tasks_assume_role" {
   statement {
     effect = "Allow"
@@ -11,35 +18,26 @@ data "aws_iam_policy_document" "ecs_tasks_assume_role" {
   }
 }
 
-locals {
-  cluster_name        = "${var.name_prefix}-${var.environment}-ecs-cluster"
-  service_name        = "${var.name_prefix}-${var.environment}-api-service"
-  task_family         = "${var.name_prefix}-${var.environment}-api"
-  log_group_name      = "/ecs/${var.name_prefix}/${var.environment}/api"
-  api_container_name  = "api"
-  api_container_image = "${var.ecr_repository_url}:${var.api_image_tag}"
-}
+resource "aws_ecs_cluster" "this" {
+  name = "${var.name_prefix}-${var.environment}-ecs-cluster"
 
-resource "aws_cloudwatch_log_group" "api" {
-  name              = local.log_group_name
-  retention_in_days = var.api_log_retention_days
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 
   tags = merge(var.tags, {
-    Name = local.log_group_name
+    Name = "${var.name_prefix}-${var.environment}-ecs-cluster"
     Tier = "private-app"
   })
 }
 
-resource "aws_ecs_cluster" "this" {
-  name = local.cluster_name
-
-  setting {
-    name  = "containerInsights"
-    value = var.enable_container_insights ? "enabled" : "disabled"
-  }
+resource "aws_cloudwatch_log_group" "api" {
+  name              = "/ecs/${var.name_prefix}/${var.environment}/api"
+  retention_in_days = var.log_retention_days
 
   tags = merge(var.tags, {
-    Name = local.cluster_name
+    Name = "/ecs/${var.name_prefix}/${var.environment}/api"
     Tier = "private-app"
   })
 }
@@ -60,32 +58,22 @@ resource "aws_iam_role_policy_attachment" "task_execution_managed" {
 
 data "aws_iam_policy_document" "task_execution_secrets" {
   statement {
-    sid    = "AllowReadDatabaseSecret"
+    sid    = "AllowReadRdsManagedSecret"
     effect = "Allow"
 
     actions = [
-      "secretsmanager:GetSecretValue"
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret"
     ]
 
-    resources = [
-      var.db_master_user_secret_arn
-    ]
+    resources = [var.db_secret_arn]
   }
 }
 
-resource "aws_iam_policy" "task_execution_secrets" {
-  name        = "${var.name_prefix}-${var.environment}-ecs-execution-secrets-policy"
-  description = "Allow ECS task execution role to read the RDS managed secret."
-  policy      = data.aws_iam_policy_document.task_execution_secrets.json
-
-  tags = merge(var.tags, {
-    Name = "${var.name_prefix}-${var.environment}-ecs-execution-secrets-policy"
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "task_execution_secrets" {
-  role       = aws_iam_role.task_execution.name
-  policy_arn = aws_iam_policy.task_execution_secrets.arn
+resource "aws_iam_role_policy" "task_execution_secrets" {
+  name   = "${var.name_prefix}-${var.environment}-ecs-secret-access"
+  role   = aws_iam_role.task_execution.id
+  policy = data.aws_iam_policy_document.task_execution_secrets.json
 }
 
 resource "aws_iam_role" "task" {
@@ -101,8 +89,8 @@ resource "aws_ecs_task_definition" "api" {
   family                   = local.task_family
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = tostring(var.api_cpu)
-  memory                   = tostring(var.api_memory)
+  cpu                      = tostring(var.task_cpu)
+  memory                   = tostring(var.task_memory)
   execution_role_arn       = aws_iam_role.task_execution.arn
   task_role_arn            = aws_iam_role.task.arn
 
@@ -113,14 +101,14 @@ resource "aws_ecs_task_definition" "api" {
 
   container_definitions = jsonencode([
     {
-      name      = local.api_container_name
-      image     = local.api_container_image
+      name      = "api"
+      image     = var.container_image
       essential = true
 
       portMappings = [
         {
-          containerPort = var.api_container_port
-          hostPort      = var.api_container_port
+          containerPort = var.container_port
+          hostPort      = var.container_port
           protocol      = "tcp"
         }
       ]
@@ -137,6 +125,10 @@ resource "aws_ecs_task_definition" "api" {
         {
           name  = "LOG_LEVEL"
           value = "INFO"
+        },
+        {
+          name  = "DATABASE_URL"
+          value = ""
         },
         {
           name  = "DB_HOST"
@@ -159,11 +151,11 @@ resource "aws_ecs_task_definition" "api" {
       secrets = [
         {
           name      = "DB_USER"
-          valueFrom = "${var.db_master_user_secret_arn}:username::"
+          valueFrom = "${var.db_secret_arn}:username::"
         },
         {
           name      = "DB_PASSWORD"
-          valueFrom = "${var.db_master_user_secret_arn}:password::"
+          valueFrom = "${var.db_secret_arn}:password::"
         }
       ]
 
@@ -172,14 +164,14 @@ resource "aws_ecs_task_definition" "api" {
         options = {
           awslogs-group         = aws_cloudwatch_log_group.api.name
           awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "api"
+          awslogs-stream-prefix = "ecs"
         }
       }
 
       healthCheck = {
         command = [
           "CMD-SHELL",
-          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:${var.api_container_port}/health/live', timeout=3)\""
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/live', timeout=3)\" || exit 1"
         ]
         interval    = 30
         timeout     = 5
@@ -190,7 +182,7 @@ resource "aws_ecs_task_definition" "api" {
   ])
 
   tags = merge(var.tags, {
-    Name = local.task_family
+    Name = "${var.name_prefix}-${var.environment}-api-task"
     Tier = "private-app"
   })
 }
@@ -199,21 +191,32 @@ resource "aws_ecs_service" "api" {
   name            = local.service_name
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.api.arn
-  desired_count   = var.api_desired_count
+  launch_type     = "FARGATE"
+  desired_count   = var.desired_count
 
-  launch_type      = "FARGATE"
   platform_version = var.fargate_platform_version
 
-  enable_ecs_managed_tags = true
-  propagate_tags          = "SERVICE"
-  enable_execute_command  = false
-
-  deployment_minimum_healthy_percent = 100
-  deployment_maximum_percent         = 200
+  enable_execute_command = false
+  wait_for_steady_state  = true
 
   deployment_circuit_breaker {
     enable   = true
     rollback = true
+  }
+
+  deployment_minimum_healthy_percent = 100
+  deployment_maximum_percent         = 200
+
+  health_check_grace_period_seconds = var.target_group_arn == null ? null : var.health_check_grace_period_seconds
+
+  dynamic "load_balancer" {
+    for_each = var.target_group_arn == null ? [] : [var.target_group_arn]
+
+    content {
+      target_group_arn = load_balancer.value
+      container_name   = "api"
+      container_port   = var.container_port
+    }
   }
 
   network_configuration {
@@ -226,10 +229,4 @@ resource "aws_ecs_service" "api" {
     Name = local.service_name
     Tier = "private-app"
   })
-
-  depends_on = [
-    aws_iam_role_policy_attachment.task_execution_managed,
-    aws_iam_role_policy_attachment.task_execution_secrets,
-    aws_cloudwatch_log_group.api
-  ]
 }

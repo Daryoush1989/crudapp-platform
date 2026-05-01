@@ -2,12 +2,21 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+data "aws_ecr_repository" "api" {
+  name = "${var.org_slug}/${var.project_slug}/api"
+}
+
 data "aws_caller_identity" "current" {}
 
 locals {
-  name_prefix        = "${var.org_slug}-${var.project_slug}"
-  azs                = slice(data.aws_availability_zones.available.names, 0, 2)
-  ecr_repository_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.org_slug}/${var.project_slug}/api"
+  name_prefix = "${var.org_slug}-${var.project_slug}"
+  azs         = slice(data.aws_availability_zones.available.names, 0, 2)
+
+  app_fqdn            = "${var.app_subdomain}.${var.domain_name}"
+  alb_name            = "cd-crudapp-stg-alb"
+  api_tg_name         = "cd-crudapp-stg-api-tg"
+  alb_logs_bucket     = "cd-crudapp-stg-alb-logs-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
+  api_container_image = "${data.aws_ecr_repository.api.repository_url}:${var.api_image_tag}"
 
   common_tags = {
     Project     = var.project_slug
@@ -80,31 +89,86 @@ module "vpc_endpoints" {
   app_security_group_id  = module.security.app_security_group_id
   tags                   = local.common_tags
 }
+module "alb_logs" {
+  source = "../../modules/alb_logs"
+
+  bucket_name        = local.alb_logs_bucket
+  aws_region         = var.aws_region
+  log_prefix         = "alb"
+  log_retention_days = var.alb_access_log_retention_days
+  force_destroy      = var.allow_force_destroy_alb_logs
+
+  tags = local.common_tags
+}
+
+module "acm" {
+  source = "../../modules/acm"
+
+  domain_name             = var.domain_name
+  certificate_domain_name = local.app_fqdn
+
+  tags = local.common_tags
+}
+
+module "alb" {
+  source = "../../modules/alb"
+
+  load_balancer_name      = local.alb_name
+  target_group_name       = local.api_tg_name
+  vpc_id                  = module.network.vpc_id
+  public_subnet_ids       = module.network.public_subnet_ids
+  alb_security_group_id   = module.security.alb_security_group_id
+  container_port          = var.api_container_port
+  health_check_path       = "/health/ready"
+  certificate_arn         = module.acm.certificate_arn
+  access_logs_bucket_name = module.alb_logs.bucket_name
+  access_logs_prefix      = module.alb_logs.log_prefix
+
+  tags = local.common_tags
+
+  depends_on = [
+    module.alb_logs
+  ]
+}
 
 module "ecs_api" {
   source = "../../modules/ecs"
 
-  name_prefix               = local.name_prefix
-  environment               = var.environment
-  aws_region                = var.aws_region
-  ecr_repository_url        = local.ecr_repository_url
-  api_image_tag             = var.api_image_tag
-  private_app_subnet_ids    = module.network.private_app_subnet_ids
-  app_security_group_id     = module.security.app_security_group_id
-  api_container_port        = var.api_container_port
-  api_cpu                   = var.api_cpu
-  api_memory                = var.api_memory
-  api_desired_count         = var.api_desired_count
-  api_log_retention_days    = var.api_log_retention_days
-  fargate_platform_version  = var.fargate_platform_version
-  db_host                   = module.database.db_address
-  db_port                   = module.database.db_port
-  db_name                   = module.database.db_name
-  db_master_user_secret_arn = module.database.db_master_user_secret_arn
-  enable_container_insights = false
-  tags                      = local.common_tags
+  name_prefix            = local.name_prefix
+  environment            = var.environment
+  aws_region             = var.aws_region
+  container_image        = local.api_container_image
+  private_app_subnet_ids = module.network.private_app_subnet_ids
+  app_security_group_id  = module.security.app_security_group_id
+
+  db_host       = module.database.db_address
+  db_port       = module.database.db_port
+  db_name       = module.database.db_name
+  db_secret_arn = module.database.db_master_user_secret_arn
+
+  container_port                    = var.api_container_port
+  task_cpu                          = var.api_cpu
+  task_memory                       = var.api_memory
+  desired_count                     = var.api_desired_count
+  log_retention_days                = var.api_log_retention_days
+  fargate_platform_version          = var.fargate_platform_version
+  target_group_arn                  = module.alb.api_target_group_arn
+  health_check_grace_period_seconds = 120
+
+  tags = local.common_tags
 
   depends_on = [
-    module.vpc_endpoints
+    module.vpc_endpoints,
+    module.alb
   ]
+}
+
+module "dns" {
+  source = "../../modules/dns"
+
+  domain_name            = var.domain_name
+  record_name            = var.app_subdomain
+  alb_dns_name           = module.alb.alb_dns_name
+  alb_zone_id            = module.alb.alb_zone_id
+  evaluate_target_health = true
 }
