@@ -196,3 +196,43 @@ module "observability" {
   tags = local.common_tags
 }
 
+
+module "waf" {
+  source = "../../modules/waf"
+
+  name_prefix = local.name_prefix
+  environment = var.environment
+  alb_arn     = module.alb.alb_arn
+  rate_limit  = var.waf_rate_limit
+
+  tags = local.common_tags
+}
+
+module "ecs_autoscaling" {
+  source = "../../modules/ecs_autoscaling"
+
+  name_prefix      = local.name_prefix
+  environment      = var.environment
+  ecs_cluster_name = module.ecs_api.ecs_cluster_name
+  ecs_service_name = module.ecs_api.api_service_name
+
+  min_capacity        = var.ecs_autoscaling_min_capacity
+  max_capacity        = var.ecs_autoscaling_max_capacity
+  cpu_target_value    = var.ecs_autoscaling_cpu_target
+  memory_target_value = var.ecs_autoscaling_memory_target
+
+  tags = local.common_tags
+}
+
+module "backup" {
+  source = "../../modules/backup"
+
+  name_prefix          = local.name_prefix
+  environment          = var.environment
+  backup_resource_arns = [module.database.db_instance_arn]
+  backup_schedule      = var.backup_schedule
+  delete_after_days    = var.backup_delete_after_days
+
+  tags = local.common_tags
+}
+

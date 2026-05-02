@@ -188,3 +188,46 @@ variable "rds_free_storage_threshold_bytes" {
   default     = 2147483648
 }
 
+
+variable "waf_rate_limit" {
+  description = "Maximum requests from a single IP in a 5-minute period. Step 11 starts in count mode."
+  type        = number
+  default     = 2000
+}
+
+variable "ecs_autoscaling_min_capacity" {
+  description = "Minimum ECS task count for staging autoscaling."
+  type        = number
+  default     = 1
+}
+
+variable "ecs_autoscaling_max_capacity" {
+  description = "Maximum ECS task count for staging autoscaling."
+  type        = number
+  default     = 2
+}
+
+variable "ecs_autoscaling_cpu_target" {
+  description = "Target average ECS CPU utilization percentage."
+  type        = number
+  default     = 60
+}
+
+variable "ecs_autoscaling_memory_target" {
+  description = "Target average ECS memory utilization percentage."
+  type        = number
+  default     = 70
+}
+
+variable "backup_schedule" {
+  description = "AWS Backup daily schedule. Default is 02:00 UTC."
+  type        = string
+  default     = "cron(0 2 * * ? *)"
+}
+
+variable "backup_delete_after_days" {
+  description = "Delete AWS Backup recovery points after this many days."
+  type        = number
+  default     = 14
+}
+

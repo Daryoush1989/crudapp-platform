@@ -58,8 +58,8 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "deploy" {
-  name               = local.role_name
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  name                 = local.role_name
+  assume_role_policy   = data.aws_iam_policy_document.assume_role.json
   max_session_duration = 3600
 
   tags = merge(var.tags, {

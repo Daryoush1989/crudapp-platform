@@ -163,3 +163,60 @@ output "api_error_metric_name" {
   value       = module.observability.api_error_metric_name
 }
 
+
+output "alb_arn" {
+  description = "Application Load Balancer ARN used for AWS WAF association."
+  value       = module.alb.alb_arn
+}
+
+output "db_instance_arn" {
+  description = "RDS DB instance ARN used for AWS Backup selection."
+  value       = module.database.db_instance_arn
+}
+
+
+output "waf_web_acl_name" {
+  description = "WAF Web ACL name associated with the staging ALB."
+  value       = module.waf.web_acl_name
+}
+
+output "waf_web_acl_arn" {
+  description = "WAF Web ACL ARN associated with the staging ALB."
+  value       = module.waf.web_acl_arn
+}
+
+output "waf_mode" {
+  description = "Initial WAF rollout mode."
+  value       = module.waf.waf_mode
+}
+
+output "ecs_autoscaling_resource_id" {
+  description = "Application Auto Scaling ECS service resource ID."
+  value       = module.ecs_autoscaling.resource_id
+}
+
+output "ecs_autoscaling_min_capacity" {
+  description = "Minimum ECS autoscaling task count."
+  value       = module.ecs_autoscaling.min_capacity
+}
+
+output "ecs_autoscaling_max_capacity" {
+  description = "Maximum ECS autoscaling task count."
+  value       = module.ecs_autoscaling.max_capacity
+}
+
+output "backup_vault_name" {
+  description = "AWS Backup vault name."
+  value       = module.backup.backup_vault_name
+}
+
+output "backup_plan_id" {
+  description = "AWS Backup plan ID."
+  value       = module.backup.backup_plan_id
+}
+
+output "backup_plan_arn" {
+  description = "AWS Backup plan ARN."
+  value       = module.backup.backup_plan_arn
+}
+
