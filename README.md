@@ -80,3 +80,59 @@ Step 7 adds the private application runtime for the staging environment:
 
 This step intentionally does not create an Application Load Balancer, Route 53 records, ACM certificate, NAT Gateway, or public application URL.
 
+
+## Final Production-Style Architecture
+
+This project is a production-style 3-tier AWS web application platform built for Cloud Dash.
+
+### Public Entry Layer
+
+- Route 53 public DNS
+- ACM TLS certificate
+- Public Application Load Balancer
+- HTTP to HTTPS redirect
+- AWS WAF attached to the ALB
+
+### Private Application Layer
+
+- ECS Fargate service
+- Private app subnets
+- No public IP on ECS tasks
+- Docker image stored in Amazon ECR
+- GitHub Actions CI/CD using OIDC
+- CloudWatch Logs
+
+### Private Data Layer
+
+- Amazon RDS PostgreSQL
+- Private data subnets
+- Public access disabled
+- Storage encryption enabled
+- RDS-managed Secrets Manager secret
+- AWS Backup plan and backup vault
+
+### Observability and Operations
+
+- CloudWatch dashboard
+- CloudWatch alarms
+- SNS email alerts
+- ALB access logs
+- ECS autoscaling
+- Health and readiness endpoints
+
+### Public URL
+
+https://staging.awsclouddash.click
+
+### Final Validation Evidence
+
+Final validation screenshots are stored under:
+
+docs/evidence/step12-final-validation
+
+### Final Runbooks
+
+Operational and cost-control runbooks are stored under:
+
+docs/runbook
+
