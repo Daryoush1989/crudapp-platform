@@ -146,3 +146,45 @@ variable "allow_force_destroy_alb_logs" {
   type        = bool
   default     = false
 }
+variable "alert_email" {
+  description = "Optional email address for CloudWatch alarm notifications. Leave empty to disable email alerts."
+  type        = string
+  default     = ""
+}
+
+variable "alb_5xx_threshold" {
+  description = "ALB target 5XX count threshold."
+  type        = number
+  default     = 5
+}
+
+variable "alb_response_time_threshold_seconds" {
+  description = "ALB average target response time threshold in seconds."
+  type        = number
+  default     = 1
+}
+
+variable "ecs_cpu_threshold" {
+  description = "ECS CPU utilization alarm threshold percentage."
+  type        = number
+  default     = 80
+}
+
+variable "ecs_memory_threshold" {
+  description = "ECS memory utilization alarm threshold percentage."
+  type        = number
+  default     = 80
+}
+
+variable "rds_cpu_threshold" {
+  description = "RDS CPU utilization alarm threshold percentage."
+  type        = number
+  default     = 80
+}
+
+variable "rds_free_storage_threshold_bytes" {
+  description = "RDS free storage threshold in bytes."
+  type        = number
+  default     = 2147483648
+}
+

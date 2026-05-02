@@ -137,3 +137,29 @@ output "alb_access_logs_bucket_name" {
   description = "S3 bucket for ALB access logs."
   value       = module.alb_logs.bucket_name
 }
+output "db_instance_identifier" {
+  description = "RDS DB instance identifier used for CloudWatch RDS metrics."
+  value       = module.database.db_instance_identifier
+}
+
+
+output "cloudwatch_dashboard_name" {
+  description = "CloudWatch operations dashboard name."
+  value       = module.observability.dashboard_name
+}
+
+output "alert_sns_topic_arn" {
+  description = "SNS alert topic ARN. Empty when email alerting is disabled."
+  value       = module.observability.sns_topic_arn
+}
+
+output "cloudwatch_alarm_names" {
+  description = "CloudWatch alarm names created for staging."
+  value       = module.observability.alarm_names
+}
+
+output "api_error_metric_name" {
+  description = "Custom CloudWatch metric name for API error logs."
+  value       = module.observability.api_error_metric_name
+}
+

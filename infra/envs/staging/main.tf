@@ -172,3 +172,27 @@ module "dns" {
   alb_zone_id            = module.alb.alb_zone_id
   evaluate_target_health = true
 }
+module "observability" {
+  source = "../../modules/observability"
+
+  name_prefix                         = local.name_prefix
+  environment                         = var.environment
+  aws_region                          = var.aws_region
+  public_app_url                      = "https://${var.app_subdomain}.${var.domain_name}"
+  alb_arn_suffix                      = module.alb.alb_arn_suffix
+  target_group_arn_suffix             = module.alb.api_target_group_arn_suffix
+  ecs_cluster_name                    = module.ecs_api.ecs_cluster_name
+  ecs_service_name                    = module.ecs_api.api_service_name
+  api_log_group_name                  = module.ecs_api.api_log_group_name
+  db_instance_identifier              = module.database.db_instance_identifier
+  alert_email                         = var.alert_email
+  alb_5xx_threshold                   = var.alb_5xx_threshold
+  alb_response_time_threshold_seconds = var.alb_response_time_threshold_seconds
+  ecs_cpu_threshold                   = var.ecs_cpu_threshold
+  ecs_memory_threshold                = var.ecs_memory_threshold
+  rds_cpu_threshold                   = var.rds_cpu_threshold
+  rds_free_storage_threshold_bytes    = var.rds_free_storage_threshold_bytes
+
+  tags = local.common_tags
+}
+

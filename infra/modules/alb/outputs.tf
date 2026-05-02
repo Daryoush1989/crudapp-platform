@@ -32,3 +32,13 @@ output "https_listener_arn" {
   description = "HTTPS listener ARN."
   value       = aws_lb_listener.https.arn
 }
+output "alb_arn_suffix" {
+  description = "ALB ARN suffix used for CloudWatch metric dimensions."
+  value       = aws_lb.this.arn_suffix
+}
+
+output "api_target_group_arn_suffix" {
+  description = "Target group ARN suffix used for CloudWatch metric dimensions."
+  value       = aws_lb_target_group.api.arn_suffix
+}
+
